@@ -17,8 +17,6 @@ Widget wrapWithProvider<S>({
       child: child,
     );
 
-extension WrapWithConsumer<S> on Store<S> {}
-
 Widget wrapWithConsumer<S, P>({
   required ReducedTransformer<S, P> transformer,
   required ReducedWidgetBuilder<P> builder,
@@ -39,6 +37,7 @@ ValueListenableBuilder<P> internalWrapWithConsumer<S, P>({
   required ReducedWidgetBuilder<P> builder,
 }) =>
     ValueListenableBuilder<P>(
-      valueListenable: store.command.map((state) => transformer(store)),
+      valueListenable:
+          store.command.map((state) => transformer(store)),
       builder: (_, props, ___) => builder(props: props),
     );
