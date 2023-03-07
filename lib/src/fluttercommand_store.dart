@@ -1,12 +1,13 @@
-// fluttercommand_reducible.dart
+// fluttercommand_store.dart
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_command/flutter_command.dart';
 import 'package:reduced/reduced.dart';
+
 import 'inherited_widgets.dart';
 
-/// Implementation of the [Reducible] interface with a [Command] property.
-class Store<S> extends Reducible<S> {
+/// Implementation of the [ReducedStore] interface with a [Command] property.
+class Store<S> extends ReducedStore<S> {
   Store(S initialState) : _state = initialState;
 
   S _state;

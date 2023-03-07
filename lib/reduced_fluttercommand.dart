@@ -1,4 +1,4 @@
 // reduced_fluttercommand.dart
 
-export 'src/fluttercommand_reducible.dart';
-export 'src/fluttercommand_wrapper.dart';
+export 'src/fluttercommand_store.dart';
+export 'src/fluttercommand_widgets.dart';
