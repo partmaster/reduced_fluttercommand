@@ -59,16 +59,30 @@ Widget wrapWithProvider<S>({
 #### 4. Trigger a rebuild on widgets selectively after a state change.
 
 ```dart
-extension WrapWithConsumer<S> on Store<S> {
-  Widget wrapWithConsumer<P>({
-    required ReducedTransformer<S, P> transformer,
-    required ReducedWidgetBuilder<P> builder,
-  }) =>
-      ValueListenableBuilder<P>(
-        valueListenable: command.map((state) => transformer(this)),
-        builder: (_, props, ___) => builder(props: props),
+Widget wrapWithConsumer<S, P>({
+  required ReducedTransformer<S, P> transformer,
+  required ReducedWidgetBuilder<P> builder,
+}) =>
+    Builder(builder: (context) {
+      final store = context.store<S>();
+      return internalWrapWithConsumer(
+        store: store,
+        transformer: transformer,
+        builder: builder,
       );
-}
+    });
+```
+
+```dart 
+ValueListenableBuilder<P> internalWrapWithConsumer<S, P>({
+  required Store<S> store,
+  required ReducedTransformer<S, P> transformer,
+  required ReducedWidgetBuilder<P> builder,
+}) =>
+    ValueListenableBuilder<P>(
+      valueListenable: store.command.map((state) => transformer(store)),
+      builder: (_, props, ___) => builder(props: props),
+    );
 ```
 
 ## Getting started
@@ -170,12 +184,9 @@ class MyApp extends StatelessWidget {
         initialState: 0,
         child: MaterialApp(
           theme: ThemeData(primarySwatch: Colors.blue),
-          home: Builder(
-            builder: (context) =>
-                context.store<int>().wrapWithConsumer(
-                      transformer: PropsTransformer.transform,
-                      builder: MyHomePage.new,
-                    ),
+          home: wrapWithConsumer(
+            transformer: PropsTransformer.transform,
+            builder: MyHomePage.new,
           ),
         ),
       );
