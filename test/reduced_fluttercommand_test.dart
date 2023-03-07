@@ -46,7 +46,8 @@ void main() {
   test('wrapWithConsumer', () {
     final store = Store(0);
     const child = SizedBox();
-    final objectUnderTest = store.wrapWithConsumer(
+    final objectUnderTest = internalWrapWithConsumer(
+      store: store,
       builder: ({Key? key, required int props}) => child,
       transformer: (reducible) => 1,
     );

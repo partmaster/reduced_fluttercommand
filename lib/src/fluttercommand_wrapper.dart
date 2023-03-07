@@ -17,13 +17,28 @@ Widget wrapWithProvider<S>({
       child: child,
     );
 
-extension WrapWithConsumer<S> on Store<S> {
-  Widget wrapWithConsumer<P>({
-    required ReducedTransformer<S, P> transformer,
-    required ReducedWidgetBuilder<P> builder,
-  }) =>
-      ValueListenableBuilder<P>(
-        valueListenable: command.map((state) => transformer(this)),
-        builder: (_, props, ___) => builder(props: props),
+extension WrapWithConsumer<S> on Store<S> {}
+
+Widget wrapWithConsumer<S, P>({
+  required ReducedTransformer<S, P> transformer,
+  required ReducedWidgetBuilder<P> builder,
+}) =>
+    Builder(builder: (context) {
+      final store = context.store<S>();
+      return internalWrapWithConsumer(
+        store: store,
+        transformer: transformer,
+        builder: builder,
       );
-}
+    });
+
+@visibleForTesting
+ValueListenableBuilder<P> internalWrapWithConsumer<S, P>({
+  required Store<S> store,
+  required ReducedTransformer<S, P> transformer,
+  required ReducedWidgetBuilder<P> builder,
+}) =>
+    ValueListenableBuilder<P>(
+      valueListenable: store.command.map((state) => transformer(store)),
+      builder: (_, props, ___) => builder(props: props),
+    );
