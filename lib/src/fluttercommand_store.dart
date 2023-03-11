@@ -16,9 +16,9 @@ class Store<S> extends ReducedStore<S> {
   get state => _state;
 
   @override
-  reduce(reducer) => command(reducer);
+  dispatch(event) => command(event);
 
-  S _reduce(Reducer<S> reducer) => _state = reducer(_state);
+  S _reduce(Event<S> event) => _state = event(_state);
 
   late final command = Command.createSync(_reduce, _state);
 }
