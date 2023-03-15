@@ -5,7 +5,7 @@ import 'package:reduced/reduced.dart';
 import 'package:reduced_fluttercommand/reduced_fluttercommand.dart';
 
 import 'props.dart';
-import 'transformer.dart';
+import 'mappers.dart';
 
 class MyHomePagePropsConsumer extends StatelessWidget {
   const MyHomePagePropsConsumer({
