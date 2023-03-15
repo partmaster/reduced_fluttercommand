@@ -7,18 +7,18 @@
 
 Implementation of the 'reduced' API for the 'fluttercommand' state management framework with following features:
 
-1. Implementation of the ```ReducedStore``` interface 
-2. Extension on the ```BuildContext``` for convenient access to the  ```ReducedStore``` instance.
+1. Implementation of the ```Store``` interface 
+2. Extension on the ```BuildContext``` for convenient access to the  ```Store``` instance.
 3. Register a state for management.
 4. Trigger a rebuild on widgets selectively after a state change.
 
 ## Features
 
-#### 1. Implementation of the ```ReducedStore``` interface 
+#### 1. Implementation of the ```Store``` interface 
 
 ```dart
-class Store<S> extends ReducedStore<S> {
-  Store(S initialState) : _state = initialState;
+class ReducedStore<S> extends Store<S> {
+  ReducedStore(S initialState) : _state = initialState;
 
   S _state;
 
@@ -26,11 +26,11 @@ class Store<S> extends ReducedStore<S> {
   get state => _state;
 
   @override
-  reduce(reducer) => command(reducer);
+  process(event) => command(event);
 
-  S _reduce(Reducer<S> reducer) => _state = reducer(_state);
+  S _process(Event<S> event) => _state = event(_state);
 
-  late final command = Command.createSync(_reduce, _state);
+  late final command = Command.createSync(_process, _state);
 }
 ```
 
@@ -38,7 +38,8 @@ class Store<S> extends ReducedStore<S> {
 
 ```dart
 extension ExtensionStoreOnBuildContext on BuildContext {
-  Store<S> store<S>() => InheritedValueWidget.of<Store<S>>(this);
+  ReducedStore<S> store<S>() =>
+      InheritedValueWidget.of<ReducedStore<S>>(this);
 }
 ```
 
@@ -57,7 +58,7 @@ class ReducedProvider<S> extends StatelessWidget {
 
   @override
   Widget build(context) => StatefulInheritedValueWidget(
-        converter: (rawValue) => Store(rawValue),
+        converter: (rawValue) => ReducedStore(rawValue),
         rawValue: initialState,
         child: child,
       );
@@ -70,20 +71,20 @@ class ReducedProvider<S> extends StatelessWidget {
 class ReducedConsumer<S, P> extends StatelessWidget {
   const ReducedConsumer({
     super.key,
-    required this.transformer,
+    required this.mapper,
     required this.builder,
   });
 
-  final ReducedTransformer<S, P> transformer;
-  final ReducedWidgetBuilder<P> builder;
+  final StateToPropsMapper<S, P> mapper;
+  final WidgetFromPropsBuilder<P> builder;
 
   @override
   Widget build(BuildContext context) => _build(context.store<S>());
 
-  ValueListenableBuilder<P> _build(Store<S> store) =>
+  ValueListenableBuilder<P> _build(ReducedStore<S> store) =>
       ValueListenableBuilder<P>(
         valueListenable:
-            store.command.map((state) => transformer(store)),
+            store.command.map((state) => mapper(store.state, store)),
         builder: (_, props, ___) => builder(props: props),
       );
 }
@@ -95,8 +96,11 @@ In the pubspec.yaml add dependencies on the package 'reduced' and on the package
 
 ```
 dependencies:
-  reduced: ^0.2.1
-  reduced_fluttercommand: ^0.2.1
+  reduced: 0.4.0
+  reduced_fluttercommand: 
+    git:
+      url: https://github.com/partmaster/reduced_fluttercommand.git
+      ref: v0.4.0
 ```
 
 Import package 'reduced' to implement the logic.
@@ -120,25 +124,26 @@ Implementation of the counter demo app logic with the 'reduced' API without furt
 
 import 'package:flutter/material.dart';
 import 'package:reduced/reduced.dart';
+import 'package:reduced/callbacks.dart';
 
-class Incrementer extends Reducer<int> {
+class CounterIncremented extends Event<int> {
   @override
   int call(int state) => state + 1;
 }
 
 class Props {
-  Props({required this.counterText, required this.onPressed});
+  const Props({required this.counterText, required this.onPressed});
+
   final String counterText;
-  final Callable<void> onPressed;
-  @override
-  toString() => counterText;
+  final VoidCallable onPressed;
 }
 
-class PropsTransformer {
-  static Props transform(ReducedStore<int> store) => Props(
-        counterText: '${store.state}',
-        onPressed: CallableAdapter(store, Incrementer()),
-      );
+class PropsMapper extends Props {
+  PropsMapper(int state, EventProcessor<int> processor)
+      : super(
+          counterText: '$state',
+          onPressed: EventCarrier(processor, CounterIncremented()),
+        );
 }
 
 class MyHomePage extends StatelessWidget {
@@ -191,7 +196,7 @@ class MyApp extends StatelessWidget {
         child: MaterialApp(
           theme: ThemeData(primarySwatch: Colors.blue),
           home: const ReducedConsumer(
-            transformer: PropsTransformer.transform,
+            mapper: PropsMapper.new,
             builder: MyHomePage.new,
           ),
         ),

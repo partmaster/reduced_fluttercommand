@@ -6,9 +6,9 @@ import 'package:reduced/reduced.dart';
 
 import 'inherited_widgets.dart';
 
-/// Implementation of the [ReducedStore] interface with a [Command] property.
-class Store<S> extends ReducedStore<S> {
-  Store(S initialState) : _state = initialState;
+/// Implementation of the [Store] interface with a [Command] property.
+class ReducedStore<S> extends Store<S> {
+  ReducedStore(S initialState) : _state = initialState;
 
   S _state;
 
@@ -16,14 +16,15 @@ class Store<S> extends ReducedStore<S> {
   get state => _state;
 
   @override
-  dispatch(event) => command(event);
+  process(event) => command(event);
 
-  S _reduce(Event<S> event) => _state = event(_state);
+  S _process(Event<S> event) => _state = event(_state);
 
-  late final command = Command.createSync(_reduce, _state);
+  late final command = Command.createSync(_process, _state);
 }
 
 extension ExtensionStoreOnBuildContext on BuildContext {
-  /// Convenience method for getting a [Store] instance.
-  Store<S> store<S>() => InheritedValueWidget.of<Store<S>>(this);
+  /// Convenience method for getting a [ReducedStore] instance.
+  ReducedStore<S> store<S>() =>
+      InheritedValueWidget.of<ReducedStore<S>>(this);
 }
