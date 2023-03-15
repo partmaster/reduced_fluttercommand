@@ -25,6 +25,5 @@ class ReducedStore<S> extends Store<S> {
 
 extension ExtensionStoreOnBuildContext on BuildContext {
   /// Convenience method for getting a [ReducedStore] instance.
-  ReducedStore<S> store<S>() =>
-      InheritedValueWidget.of<ReducedStore<S>>(this);
+  ReducedStore<S> store<S>() => InheritedValueWidget.of<ReducedStore<S>>(this);
 }
